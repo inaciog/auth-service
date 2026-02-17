@@ -20,7 +20,7 @@ const PORT = process.env.PORT || 8080;
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
 const COOKIE_NAME = 'auth_session';
 const COOKIE_DOMAIN = process.env.COOKIE_DOMAIN || '.fly.dev'; // Shared across subdomains
-const MASTER_PASSWORD = process.env.MASTER_PASSWORD || 'inacio2026'; // Change this!
+const MASTER_PASSWORD = process.env.MASTER_PASSWORD || 'i486983nacio:!';
 
 // In-memory user permissions (for future extension)
 const userPermissions = new Map();
