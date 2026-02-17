@@ -19,7 +19,7 @@ const PORT = process.env.PORT || 8080;
 // Config
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
 const COOKIE_NAME = 'auth_session';
-const COOKIE_DOMAIN = process.env.COOKIE_DOMAIN || 'inacio-auth.fly.dev'; // Shared across subdomains - use this for now
+const COOKIE_DOMAIN = process.env.COOKIE_DOMAIN || '.fly.dev'; // Shared across all .fly.dev subdomains
 const MASTER_PASSWORD = process.env.MASTER_PASSWORD || 'i486983nacio:!';
 
 // In-memory user permissions (for future extension)
@@ -75,7 +75,8 @@ function verifyAuth(req, res, next) {
 
 /** GET / - Check auth status */
 app.get('/', (req, res) => {
-  const token = req.cookies[COOKIE_NAME];
+  // Try to get token from cookie or query param (for cross-domain auth)
+  let token = req.cookies[COOKIE_NAME] || req.query.token;
   
   if (!token) {
     return res.redirect('/login');
@@ -140,8 +141,8 @@ app.get('/', (req, res) => {
           <h1>Authenticated</h1>
           <p>Welcome back, ${decoded.name || 'Inacio'}!</p>
           <div class="apps">
-            <a class="app-link" href="https://reminders-app.fly.dev">Reminders</a>
-            <a class="app-link" href="https://classquizzes.fly.dev">ClassQuizzes</a>
+            <a class="app-link" href="https://reminders-app.fly.dev?token=${token}">Reminders</a>
+            <a class="app-link" href="https://classquizzes.fly.dev?token=${token}">ClassQuizzes</a>
           </div>
           <a class="logout" href="/logout">Logout</a>
         </div>
@@ -271,19 +272,20 @@ app.post('/api/login', (req, res) => {
     domain: COOKIE_DOMAIN,
     httpOnly: true,
     secure: true,
-    sameSite: 'lax',
+    sameSite: 'none',  // Required for cross-subdomain sharing
     maxAge: 30 * 24 * 60 * 60 * 1000 // 30 days
   });
   
   res.json({ 
     success: true, 
-    redirect: returnTo || '/'
+    redirect: returnTo || '/',
+    token: token  // Also return token for apps that need it
   });
 });
 
 /** GET /logout - Clear session */
 app.get('/logout', (req, res) => {
-  res.clearCookie(COOKIE_NAME, { domain: COOKIE_DOMAIN });
+  res.clearCookie(COOKIE_NAME, { domain: COOKIE_DOMAIN, sameSite: 'none', secure: true });
   res.redirect('/login');
 });
 
