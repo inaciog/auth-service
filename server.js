@@ -61,7 +61,7 @@ function verifyAuth(req, res, next) {
     req.user = decoded;
     next();
   } catch (err) {
-    res.clearCookie(COOKIE_NAME, { domain: COOKIE_DOMAIN });
+    res.clearCookie(COOKIE_NAME, { domain: COOKIE_DOMAIN, sameSite: 'none', secure: true });
     return res.status(401).json({ 
       error: 'Invalid session',
       loginUrl: `https://auth.${COOKIE_DOMAIN.replace(/^\./, '')}/login`
@@ -79,7 +79,23 @@ app.get('/', (req, res) => {
   let token = req.cookies[COOKIE_NAME] || req.query.token;
   
   if (!token) {
-    return res.redirect('/login');
+    // Try to get from localStorage via script
+    return res.send(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <script>
+          const token = localStorage.getItem('auth_token');
+          if (token) {
+            window.location.href = '/?token=' + encodeURIComponent(token);
+          } else {
+            window.location.href = '/login';
+          }
+        </script>
+      </head>
+      <body>Checking authentication...</body>
+      </html>
+    `);
   }
   
   try {
@@ -234,12 +250,17 @@ app.get('/login', (req, res) => {
           const res = await fetch('/api/login', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
             body: JSON.stringify({ password, returnTo })
           });
           
           const data = await res.json();
           
           if (data.success) {
+            // Also store token in localStorage as fallback
+            if (data.token) {
+              localStorage.setItem('auth_token', data.token);
+            }
             window.location.href = data.redirect || '/';
           } else {
             document.getElementById('error').textContent = 'Invalid password';
