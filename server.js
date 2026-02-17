@@ -19,7 +19,7 @@ const PORT = process.env.PORT || 8080;
 // Config
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
 const COOKIE_NAME = 'auth_session';
-const COOKIE_DOMAIN = process.env.COOKIE_DOMAIN || '.fly.dev'; // Shared across subdomains
+const COOKIE_DOMAIN = process.env.COOKIE_DOMAIN || 'inacio-auth.fly.dev'; // Shared across subdomains - use this for now
 const MASTER_PASSWORD = process.env.MASTER_PASSWORD || 'i486983nacio:!';
 
 // In-memory user permissions (for future extension)

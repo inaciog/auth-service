@@ -1,4 +1,4 @@
-app = "auth-service"
+app = "inacio-auth"
 primary_region = "iad"
 
 [build]
